@@ -1,6 +1,9 @@
 import { useState } from "react";
+import ContactCheckPanel from "./ContactCheckPanel.jsx";
+import { ManifestTable } from "./ManifestBoard.jsx";
+import { SONAR_NODES, SONAR_RANGE_M } from "../sim/scenario.js";
 
-const TABS = ["Sensors", "Coverage Notes", "Data Sources", "About"];
+const TABS = ["Contact Check", "Manifest", "Sensors", "Coverage Notes", "Data Sources", "About"];
 
 // ── Tab content ────────────────────────────────────────────────────────────────
 
@@ -19,7 +22,7 @@ function SensorsTab() {
           </tr>
         </thead>
         <tbody>
-          {SENSOR_ROWS.map((r, i) => (
+          {[...SONAR_ROWS, ...SENSOR_ROWS].map((r, i) => (
             <tr key={i}>
               <td><code>{r.id}</code></td>
               <td><span className="badge" style={{ background: TYPE_COLORS[r.type] }}>{r.type}</span></td>
@@ -41,8 +44,8 @@ function CoverageTab() {
       <p className="panel-note">
         Detection radii shown on the map are <strong>estimates</strong> based on typical optical/camera
         coverage for each station type in a working harbor environment. They do not represent sonar,
-        radar, or any underwater detection capability — those systems are not currently deployed at
-        these posts.
+        radar, or any underwater detection capability. The purple <strong>sonar nodes</strong> are
+        different: they are simulated for this demo, placed at the entrance and channel chokepoints.
       </p>
       <table className="panel-table">
         <thead>
@@ -76,9 +79,10 @@ function CoverageTab() {
         surrounding water.
       </p>
       <p className="panel-note">
-        For a real UUV detection capability, fixed sonar nodes at the harbor entrance and channel
-        chokepoints would be the meaningful coverage layer. Typical harbor sonar ranges: 200m–1km
-        depending on depth, turbidity, and traffic noise.
+        The simulated sonar nodes use a conservative {(SONAR_RANGE_M / 1000).toFixed(1)} km range. Commercial harbor sonar
+        vendors quote up to about 1.5 km for small vehicles in good conditions, and real performance
+        depends on depth, turbidity and traffic noise. Detection is treated as a solved input here:
+        the product is the decision layer on top of it.
       </p>
     </div>
   );
@@ -138,6 +142,7 @@ const TYPE_COLORS = {
   "Wave Buoy":  "#0a84ff",
   "Tide Gauge": "#0891b2",
   "Watch Post": "#ea6a12",
+  "Sonar Node": "#8b5cf6",
 };
 
 // Verified against NOAA NDBC live station list and CO-OPS API, Oct 2026.
@@ -157,6 +162,15 @@ const SENSOR_ROWS = [
   { id: "lb-patrol",  type: "Watch Post", name: "Long Beach Harbor Patrol HQ",        measures: "Visual / camera + patrol vessel",                     radius: "~1.5 km (est.)" },
   { id: "uscg-la-lb", type: "Watch Post", name: "USCG Sector LA-LB",                 measures: "Surface radar + elevated camera",                     radius: "~2.0 km (est.)" },
 ];
+
+// Simulated sonar nodes used by the demo scenarios (see src/sim/scenario.js).
+const SONAR_ROWS = SONAR_NODES.map((n) => ({
+  id: n.id,
+  type: "Sonar Node",
+  name: `${n.name} (simulated)`,
+  measures: "Active/passive sonar tracks: position, speed, heading, class",
+  radius: `~${(SONAR_RANGE_M / 1000).toFixed(1)} km (est.)`,
+}));
 
 const DATA_SOURCES = [
   {
@@ -191,10 +205,12 @@ const DATA_SOURCES = [
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function MapInfoPanel() {
-  const [active, setActive] = useState("Sensors");
+export default function MapInfoPanel({ sim, dispatch }) {
+  const [active, setActive] = useState("Contact Check");
 
   const TAB_CONTENT = {
+    "Contact Check":    <ContactCheckPanel sim={sim} dispatch={dispatch} />,
+    "Manifest":         <ManifestTable sim={sim} />,
     "Sensors":          <SensorsTab />,
     "Coverage Notes":   <CoverageTab />,
     "Data Sources":     <DataSourcesTab />,
