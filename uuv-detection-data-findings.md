@@ -191,6 +191,36 @@ interface ContactAssessment {
 
 ---
 
+## Part 6: Error rates (how well detection separates marine life from other targets)
+
+No single accuracy figure exists. These are results from specific studies, not guarantees for our harbor.
+
+| Study or source | Setting | Result |
+|---|---|---|
+| Tidal channel multibeam sonar (random forest) | Biological vs. non-biological targets | Recall 0.97, precision 0.60. Then 89% of biological targets labeled correctly as seals, diving birds, fish schools, or small targets |
+| Harbour seal sonar study | Seabed multibeam sonar, 65 confirmed seals and 96 other targets | Best model classified all confirmed seals correctly, but about 8% of non-seal targets were misclassified as seals |
+| Diver detection sonar overview | Harbor security sonar | Ranges of 300 to 800 m against open-circuit divers. Large fish, shoals, and mammals cause "non-random" false alarms. Classification relies largely on track behavior |
+
+How to read them:
+- Precision 0.60 means about 40% of "biological" calls were not biological.
+- The seal sample is small (161 targets, one site).
+- None of these tested an animal against a small UUV, which is probably the hardest case. No number was found for it.
+- Behavior carries a lot of the classification weight, which supports the behavior metrics in Part 2.
+
+Limits:
+- Only abstracts and page summaries were read, not the full papers.
+- One diver-sonar false-alarm paper could not be loaded.
+- No independently verified vendor false-alarm rates were found. The Navy's "one false alarm per day" is a goal, not a measurement.
+
+Suggested simulation settings (our assumption, not sourced):
+- Upstream class wrong 10% to 40% of the time.
+- Confidence only loosely related to correctness.
+- Animals misread as vehicles more often when alone and near structures.
+
+Sources: [tidal channel multibeam](https://tethys.pnnl.gov/publications/automatic-classification-biological-targets-tidal-channel-using-multibeam-sonar), [harbour seal sonar](https://tethys.pnnl.gov/publications/automated-detection-tracking-marine-mammals-novel-sonar-tool-monitoring-effects-marine), [diver detection sonar](https://en.wikipedia.org/wiki/Diver_detection_sonar)
+
+---
+
 ## Sources
 
 - [Sentinel IDS brochure](https://www.unmannedsystemstechnology.com/wp-content/uploads/2022/06/Sentinel_IDS_Brochure.pdf)
