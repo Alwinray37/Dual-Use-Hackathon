@@ -57,13 +57,31 @@ const BREAKWATER = [
   [33.712, -118.312],
 ];
 
-// Main shipping channel approach (inbound lane centerline — approximate)
-const SHIPPING_CHANNEL = [
-  [33.580, -118.340], // outer anchorage / approach
-  [33.620, -118.320], // inner approach
-  [33.660, -118.300], // breakwater entrance
-  [33.700, -118.278], // main channel entry
-  [33.725, -118.265], // inner harbor
+// LA/LB Main Shipping Channel — based on NOAA Chart 18751
+// Inbound approach on ~045° heading, splits inside the breakwater
+
+// Inbound approach to precautionary area
+const CHANNEL_APPROACH = [
+  [33.590, -118.360], // outer separation zone / traffic lane
+  [33.640, -118.330], // precautionary area SW edge
+  [33.685, -118.308], // precautionary area center
+  [33.706, -118.291], // breakwater entrance gap (west–middle arm)
+];
+
+// LA fork — NW into Port of Los Angeles basin
+const CHANNEL_LA = [
+  [33.706, -118.291], // breakwater entrance (shared split point)
+  [33.715, -118.281], // bends NW past Angel's Gate
+  [33.724, -118.276], // main basin entry
+  [33.732, -118.272], // LAHD inner harbor
+];
+
+// Long Beach fork — NE into Port of Long Beach
+const CHANNEL_LB = [
+  [33.706, -118.291], // breakwater entrance (shared split point)
+  [33.720, -118.265], // bends NE
+  [33.740, -118.240], // LB outer harbor
+  [33.754, -118.220], // LB inner basin
 ];
 
 // Custom icon factories
@@ -125,12 +143,18 @@ export default function HarborMap() {
           </Polyline>
         )}
 
-        {/* Main shipping channel */}
-        {visible.channel && (
-          <Polyline positions={SHIPPING_CHANNEL} pathOptions={{ color: "#f59e0b", weight: 3, dashArray: "10 6", opacity: 0.8 }}>
-            <Popup>Main Shipping Channel<br />Inbound lane centerline — LA/LB port approach</Popup>
+        {/* Main shipping channel — approach + LA fork + LB fork */}
+        {visible.channel && (<>
+          <Polyline positions={CHANNEL_APPROACH} pathOptions={{ color: "#f59e0b", weight: 3, dashArray: "10 6", opacity: 0.9 }}>
+            <Popup>Main Channel — Inbound Approach<br />Traffic separation zone to breakwater entrance</Popup>
           </Polyline>
-        )}
+          <Polyline positions={CHANNEL_LA} pathOptions={{ color: "#f59e0b", weight: 2.5, dashArray: "10 6", opacity: 0.9 }}>
+            <Popup>LA Fork — Port of Los Angeles<br />NW into LAHD main basin</Popup>
+          </Polyline>
+          <Polyline positions={CHANNEL_LB} pathOptions={{ color: "#fbbf24", weight: 2.5, dashArray: "10 6", opacity: 0.9 }}>
+            <Popup>LB Fork — Port of Long Beach<br />NE into Long Beach inner basin</Popup>
+          </Polyline>
+        </>)}
 
         {/* NDBC wave/weather buoys */}
         {visible.buoys && BUOYS.map((b) => (
