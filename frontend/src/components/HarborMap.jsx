@@ -1,8 +1,8 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
-import { useState } from "react";
-import { VesselMarkers, ResearchMarkers, MammalMarkers, UuvMarker } from "./SimulatedObjects.jsx";
-import useSimulation from "../hooks/useSimulation.js";
+import { Fragment, useState, useEffect } from "react";
+import { DEMO_CENTER, DEMO_ZOOM, MANIFEST, SONAR_NODES } from "../sim/scenario.js";
+import { activeStatus, contactDefs, predictAhead, STAGE_STYLE } from "../sim/useSimulation.js";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -15,8 +15,8 @@ L.Icon.Default.mergeOptions({
 });
 
 // Harbor center (Port of Los Angeles, San Pedro Bay). Edit these to re-center.
-export const HARBOR_CENTER = [33.7361, -118.263];
-export const HARBOR_ZOOM = 13;
+export const HARBOR_CENTER = DEMO_CENTER;
+export const HARBOR_ZOOM = DEMO_ZOOM;
 
 // --- Sensor / infrastructure data (verified against NOAA live systems, Oct 2026) ---
 
@@ -87,27 +87,48 @@ const CHANNEL_LB = [
 ];
 
 // Custom icon factories
-function sonarIcon() {
+function dotIcon(color, opacity = 1) {
   return L.divIcon({
     className: "",
-    html: `<div style="
-      width:10px;height:10px;border-radius:50%;
-      background:#22d3ee;
-      border:2px solid #0891b2;
-      box-shadow:0 0 5px rgba(34,211,238,0.6);
-    "></div>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 5],
-  });
-}
-
-function dotIcon(color) {
-  return L.divIcon({
-    className: "",
-    html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.5)"></div>`,
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.5);opacity:${opacity}"></div>`,
     iconSize: [12, 12],
     iconAnchor: [6, 6],
   });
+}
+
+function sonarIcon(id, online) {
+  const c = online ? "#a78bfa" : "#64748b";
+  return L.divIcon({
+    className: "",
+    html: `<div class="sonar-pin" style="border-color:${c};color:${c}"><span>${id}</span></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+}
+
+function contactIcon(c) {
+  const st = STAGE_STYLE[c.stage] || STAGE_STYLE.pending;
+  const hot = c.stage === "handoff";
+  const busy = ["detected", "tracking", "checking"].includes(c.stage);
+  const cls = ["contact-dot", hot ? "hot" : "", busy ? "busy" : "", c.lost ? "lost" : ""].join(" ");
+  const size = c.stage === "discarded" ? 12 : 18;
+  return L.divIcon({
+    className: "",
+    html: `<div class="${cls}" style="--c:${st.color};width:${size}px;height:${size}px"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+function SizeWatcher() {
+  const map = useMap();
+  useEffect(() => {
+    const el = map.getContainer();
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map]);
+  return null;
 }
 
 function RecenterButton() {
@@ -122,53 +143,14 @@ function RecenterButton() {
   );
 }
 
-// ── Sonar detection nodes ─────────────────────────────────────────────────────
-// 20 fixed underwater/seabed sonar nodes covering all critical harbor water areas.
-// rangeM: estimated detection radius in meters (passive sonar in harbor conditions).
-// Grouped by zone for readability.
-const SONAR_NODES = [
-  // Zone A — Outer approach / traffic separation (3 nodes, large range)
-  { id: "SN-01", pos: [33.612, -118.338], rangeM: 3500, label: "Outer Approach North\nOuter separation zone, inbound lane" },
-  { id: "SN-02", pos: [33.595, -118.310], rangeM: 3500, label: "Outer Approach South\nOuter separation zone, inbound lane" },
-  { id: "SN-03", pos: [33.648, -118.318], rangeM: 3000, label: "Precautionary Area West\nTraffic separation scheme edge" },
+const LAYERS = ["buoys", "gauges", "watchPosts", "radii", "breakwater", "channel", "sonar", "zones", "contacts"];
+// Camera radii are large and clutter the demo, so they start hidden.
+const DEFAULT_OFF = ["radii"];
 
-  // Zone B — Precautionary area / channel approach (3 nodes)
-  { id: "SN-04", pos: [33.668, -118.305], rangeM: 2500, label: "Precautionary Area Center\nMain channel approach, high traffic" },
-  { id: "SN-05", pos: [33.685, -118.295], rangeM: 2000, label: "Precautionary Area East\nInner approach, pilot boarding area" },
-  { id: "SN-06", pos: [33.658, -118.285], rangeM: 2500, label: "South Approach Flank\nSouthern approach lane" },
-
-  // Zone C — Breakwater entrance / Angel's Gate (3 nodes — critical chokepoint)
-  { id: "SN-07", pos: [33.700, -118.292], rangeM: 1500, label: "Angel's Gate North\nBreakwater entrance, west–middle gap" },
-  { id: "SN-08", pos: [33.695, -118.280], rangeM: 1500, label: "Angel's Gate South\nBreakwater entrance, inner side" },
-  { id: "SN-09", pos: [33.710, -118.303], rangeM: 1800, label: "West Breakwater Flank\nOutside west arm, shallow shelf" },
-
-  // Zone D — LA Harbor main basin (3 nodes)
-  { id: "SN-10", pos: [33.718, -118.282], rangeM: 1200, label: "LA Channel Entry\nMain channel, LA fork entry" },
-  { id: "SN-11", pos: [33.727, -118.274], rangeM: 1000, label: "LA Main Basin West\nLAHD terminal approaches" },
-  { id: "SN-12", pos: [33.735, -118.265], rangeM: 1000, label: "LA Main Basin East\nInner harbor, berth row" },
-
-  // Zone E — Long Beach channel / outer basin (3 nodes)
-  { id: "SN-13", pos: [33.715, -118.265], rangeM: 1500, label: "LB Channel Entry\nMain channel, LB fork entry" },
-  { id: "SN-14", pos: [33.730, -118.248], rangeM: 1200, label: "LB Outer Basin\nLong Beach outer harbor" },
-  { id: "SN-15", pos: [33.748, -118.230], rangeM: 1000, label: "LB Inner Basin\nLong Beach terminal zone" },
-
-  // Zone F — Inner harbor / marina / pier areas (3 nodes)
-  { id: "SN-16", pos: [33.742, -118.260], rangeM: 800,  label: "Inner Harbor North\nMarina del Rey approach, quiet water" },
-  { id: "SN-17", pos: [33.750, -118.272], rangeM: 800,  label: "Research Berth Area\nR/V berth and ROV operations zone" },
-  { id: "SN-18", pos: [33.760, -118.250], rangeM: 800,  label: "LB Ferry Terminal\nPassenger terminal pier zone" },
-
-  // Zone G — Cabrillo Beach / south anchorage (2 nodes)
-  { id: "SN-19", pos: [33.705, -118.268], rangeM: 1200, label: "Cabrillo Beach Flank\nSouth inner harbor, anchorage" },
-  { id: "SN-20", pos: [33.690, -118.258], rangeM: 1500, label: "South Anchorage\nAnchorage area, east of channel" },
-];
-
-const LAYERS = ["buoys", "gauges", "watchPosts", "radii", "breakwater", "channel", "vessels", "research", "missionAreas", "mammals", "uuv", "sonar", "sonarRanges"];
-
-export default function HarborMap() {
+export default function HarborMap({ sim, onSelectContact }) {
   const [tiles, setTiles] = useState("street");
-  const positions = useSimulation();
   const [visible, setVisible] = useState(
-    Object.fromEntries(LAYERS.map((k) => [k, true]))
+    Object.fromEntries(LAYERS.map((k) => [k, !DEFAULT_OFF.includes(k)]))
   );
 
   function toggle(key) {
@@ -191,6 +173,7 @@ export default function HarborMap() {
     <>
     <div className="map-shell">
       <MapContainer center={HARBOR_CENTER} zoom={HARBOR_ZOOM} scrollWheelZoom className="map">
+        <SizeWatcher />
         <TileLayer key={tiles} url={layer.url} attribution={layer.attribution} />
 
         {/* San Pedro Breakwater */}
@@ -215,7 +198,7 @@ export default function HarborMap() {
 
         {/* NDBC wave/weather buoys */}
         {visible.buoys && BUOYS.map((b) => (
-          <Marker key={b.id} position={b.pos} icon={dotIcon("#0a84ff")}>
+          <Marker key={b.id} position={b.pos} icon={dotIcon("#0a84ff", 0.45)}>
             <Popup>
               <strong>NOAA NDBC Buoy {b.id}</strong><br />
               {b.label}
@@ -225,7 +208,7 @@ export default function HarborMap() {
 
         {/* NOAA tide gauges */}
         {visible.gauges && TIDE_GAUGES.map((g) => (
-          <Marker key={g.id} position={g.pos} icon={dotIcon("#06b6d4")}>
+          <Marker key={g.id} position={g.pos} icon={dotIcon("#06b6d4", 0.45)}>
             <Popup>
               <strong>NOAA Tide Gauge {g.id}</strong><br />
               {g.label}
@@ -256,43 +239,69 @@ export default function HarborMap() {
           </Marker>
         ))}
 
-        {/* Simulated vessels */}
-        <VesselMarkers visible={visible.vessels} positions={positions} />
+        {/* Manifest zones: where expected underwater activity is */}
+        {sim && visible.zones && MANIFEST.map((m) => {
+          const st = activeStatus(m, sim.t);
+          const col = st === "active" ? "#22c55e" : "#64748b";
+          return (
+            <Circle
+              key={m.id}
+              center={m.zone.center}
+              radius={m.zone.radiusM}
+              pathOptions={{ color: col, weight: 1.5, fillOpacity: st === "active" ? 0.1 : 0.04, dashArray: "5 5", opacity: st === "active" ? 0.9 : 0.55 }}
+            >
+              <Tooltip direction="top" sticky>
+                <strong>{m.id}</strong> {m.title}<br />
+                {m.window.start} to {m.window.end} ({st})
+              </Tooltip>
+            </Circle>
+          );
+        })}
 
-        {/* Simulated research tech + mission areas */}
-        <ResearchMarkers visible={visible.research} missionVisible={visible.missionAreas} positions={positions} />
+        {/* Simulated sonar nodes + range rings */}
+        {sim && visible.sonar && SONAR_NODES.map((n) => {
+          const online = !sim.offline[n.id];
+          return (
+            <Fragment key={n.id}>
+              <Circle
+                center={n.pos}
+                radius={n.rangeM}
+                pathOptions={{ color: online ? "#a78bfa" : "#64748b", weight: 1.5, fillOpacity: online ? 0.05 : 0.02, dashArray: online ? undefined : "2 6", opacity: online ? 0.8 : 0.5 }}
+              />
+              <Marker position={n.pos} icon={sonarIcon(n.id, online)}>
+                <Popup>
+                  <strong>Sonar node {n.id} (simulated)</strong><br />
+                  {n.name}<br />
+                  Est. range {(n.rangeM / 1000).toFixed(1)} km{online ? "" : " | OFFLINE"}
+                </Popup>
+              </Marker>
+            </Fragment>
+          );
+        })}
 
-        {/* Marine mammal sightings */}
-        <MammalMarkers visible={visible.mammals} positions={positions} />
-
-        {/* Sonar detection nodes — range circles */}
-        {visible.sonarRanges && SONAR_NODES.map((s) => (
-          <Circle
-            key={`${s.id}-range`}
-            center={s.pos}
-            radius={s.rangeM}
-            pathOptions={{ color: "#22d3ee", weight: 1, fillOpacity: 0.04, dashArray: "3 5", opacity: 0.5 }}
-          />
-        ))}
-
-        {/* Sonar detection nodes — markers */}
-        {visible.sonar && SONAR_NODES.map((s) => (
-          <Marker key={s.id} position={s.pos} icon={sonarIcon()}>
-            <Tooltip direction="top" offset={[0, -8]} opacity={0.95} sticky>
-              <strong>{s.label.split("\n")[0]}</strong>
-            </Tooltip>
-            <Popup>
-              <strong>{s.label.split("\n")[0]}</strong><br />
-              {s.label.split("\n")[1]}<br />
-              <span style={{ fontSize: "0.75em", color: "#888" }}>
-                Detection range: {(s.rangeM / 1000).toFixed(1)} km &nbsp;·&nbsp; {s.id}
-              </span>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Unauthorized UUV */}
-        <UuvMarker visible={visible.uuv} positions={positions} />
+        {/* Scripted contacts: trail, predicted path, marker */}
+        {sim && visible.contacts && contactDefs(sim).map((def) => {
+          const c = sim.contacts[def.id];
+          if (!c || c.stage === "pending" || !c.pos) return null;
+          const st = STAGE_STYLE[c.stage];
+          const showPred = c.stage === "handoff" && !c.lost;
+          const pred = showPred ? predictAhead(c, def.speedKt) : null;
+          return (
+            <Fragment key={def.id}>
+              {c.trail.length > 1 && (
+                <Polyline positions={c.trail.map((p) => p.pos)} pathOptions={{ color: st.color, weight: 3, opacity: 0.85 }} />
+              )}
+              {pred && (
+                <Polyline positions={[c.pos, pred]} pathOptions={{ color: "#ef4444", weight: 2, dashArray: "3 7", opacity: 0.9 }} />
+              )}
+              <Marker position={c.pos} icon={contactIcon(c)} eventHandlers={{ click: () => onSelectContact && onSelectContact(def.id) }}>
+                <Tooltip permanent={c.stage === "handoff" || c.stage === "checking"} direction="right" offset={[10, 0]}>
+                  <strong>{def.id}</strong> {c.lost ? "track lost" : st.label}
+                </Tooltip>
+              </Marker>
+            </Fragment>
+          );
+        })}
 
         <RecenterButton />
       </MapContainer>
@@ -314,11 +323,25 @@ export default function HarborMap() {
       </button>
       <button className={`legend-item legend-toggle${visible.watchPosts ? " on" : ""}`} onClick={() => toggle("watchPosts")}>
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f97316", display: "inline-block", flexShrink: 0 }} />
-        Harbor Watch / Patrol
+        Watch post
       </button>
       <button className={`legend-item legend-toggle${visible.radii ? " on" : ""}`} onClick={() => toggle("radii")}>
         <svg width="20" height="14"><circle cx="10" cy="7" r="6" fill="none" stroke="#f97316" strokeWidth="1.5" strokeDasharray="3 3" /></svg>
-        Detection Radius
+        Camera radius (est.)
+      </button>
+      <button className={`legend-item legend-toggle${visible.sonar ? " on" : ""}`} onClick={() => toggle("sonar")}>
+        <span className="legend-sonar" />
+        Sonar node (simulated)
+      </button>
+      <button className={`legend-item legend-toggle${visible.zones ? " on" : ""}`} onClick={() => toggle("zones")}>
+        <svg width="20" height="14"><circle cx="10" cy="7" r="6" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3 3" /></svg>
+        Manifest zone
+      </button>
+      <button className={`legend-item legend-toggle${visible.contacts ? " on" : ""}`} onClick={() => toggle("contacts")}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b", display: "inline-block", flexShrink: 0 }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", display: "inline-block", flexShrink: 0 }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", display: "inline-block", flexShrink: 0 }} />
+        Contacts: checking / cleared / needs decision
       </button>
       <button className={`legend-item legend-toggle${visible.breakwater ? " on" : ""}`} onClick={() => toggle("breakwater")}>
         <span style={{ width: 24, height: 3, background: "#888", display: "inline-block", flexShrink: 0 }} />
@@ -327,35 +350,6 @@ export default function HarborMap() {
       <button className={`legend-item legend-toggle${visible.channel ? " on" : ""}`} onClick={() => toggle("channel")}>
         <span style={{ width: 24, height: 3, background: "#f59e0b", display: "inline-block", flexShrink: 0 }} />
         Shipping Channel
-      </button>
-      <span style={{ width: 1, background: "#1e3a52", alignSelf: "stretch", margin: "0 4px" }} />
-      <button className={`legend-item legend-toggle${visible.vessels ? " on" : ""}`} onClick={() => toggle("vessels")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#e2e8f0", border: "1.5px solid #888", display: "inline-block", flexShrink: 0 }} />
-        Vessels
-      </button>
-      <button className={`legend-item legend-toggle${visible.research ? " on" : ""}`} onClick={() => toggle("research")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#a855f7", display: "inline-block", flexShrink: 0 }} />
-        Research Tech
-      </button>
-      <button className={`legend-item legend-toggle${visible.missionAreas ? " on" : ""}`} onClick={() => toggle("missionAreas")}>
-        <svg width="20" height="14"><rect x="2" y="3" width="16" height="8" fill="none" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
-        Mission Areas
-      </button>
-      <button className={`legend-item legend-toggle${visible.mammals ? " on" : ""}`} onClick={() => toggle("mammals")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#14b8a6", display: "inline-block", flexShrink: 0 }} />
-        Marine Mammals
-      </button>
-      <button className={`legend-item legend-toggle${visible.sonar ? " on" : ""}`} onClick={() => toggle("sonar")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#22d3ee", border: "1.5px solid #0891b2", display: "inline-block", flexShrink: 0 }} />
-        Sonar Nodes
-      </button>
-      <button className={`legend-item legend-toggle${visible.sonarRanges ? " on" : ""}`} onClick={() => toggle("sonarRanges")}>
-        <svg width="20" height="14"><circle cx="10" cy="7" r="6" fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="3 5" opacity="0.8" /></svg>
-        Sonar Range
-      </button>
-      <button className={`legend-item legend-toggle${visible.uuv ? " on" : ""}`} onClick={() => toggle("uuv")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", display: "inline-block", flexShrink: 0 }} />
-        Unknown UUV
       </button>
     </div>
     </>
