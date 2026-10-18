@@ -48,4 +48,10 @@ An unauthorized autonomous vehicle is in a working harbor. Detecting small under
 
 ## Repo Structure
 
-> in progress
+Run the app with `cd frontend && npm install && npm run dev`.
+
+- `frontend/src/sim/`: three scripted Operations scenarios. `scenario.js` defines sample contacts, manifest entries, source documents, and four simulated sonar nodes. `useSimulation.js` advances contacts and `matcher.js` checks each contact against the manifest.
+- `test-data/`: canonical synthetic vessel, research asset, and marine mammal records. The Activity map imports these JSON files directly; `useActivitySimulation.js` animates positions and `SimulatedObjects.jsx` renders markers and details. Its 20 sonar nodes are display overlays, not inputs to the Operations matcher.
+- `frontend/src/map/harborGeography.js`: shared map reference locations and channel geometry.
+
+Both views use demo data. No live AIS, sonar, NOAA, or permit feed is connected. The Data Sources tab lists reference endpoints for future integration.

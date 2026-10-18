@@ -89,7 +89,12 @@ export default function App() {
       {view === "Operations" && <SplitView sim={sim} dispatch={dispatch} />}
       {view === "Officer view" && <div className="view-scroll"><OfficerView sim={sim} dispatch={dispatch} /></div>}
       {view === "Manifest board" && <div className="view-scroll"><ManifestBoard sim={sim} /></div>}
-      {view === "Activity map" && <main className="activity-view"><ActivityMap /></main>}
+      {view === "Activity map" && (
+        <main className="activity-view">
+          <p className="activity-note">Synthetic activity data. Positions move in a demo simulation; no live tracking feed is connected.</p>
+          <ActivityMap />
+        </main>
+      )}
     </div>
   );
 }

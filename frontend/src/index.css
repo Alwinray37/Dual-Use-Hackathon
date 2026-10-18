@@ -469,6 +469,7 @@ body {
 .split-map { flex: 1; min-height: 0; padding: 8px 12px 0; }
 .split-map .map-shell { height: 100%; min-height: 0; width: 100%; margin: 0; }
 .activity-view { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; padding: 8px 12px 12px; }
+.activity-note { flex: none; margin: 0 0 8px; color: #8fb0c8; font-size: 12px; }
 .activity-view .map-shell { flex: 1 0 280px; height: auto; min-height: 280px; width: 100%; margin: 0; }
 .activity-view .map-legend { flex: none; margin: 0; }
 .split-handle {

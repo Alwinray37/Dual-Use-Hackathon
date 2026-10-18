@@ -91,7 +91,8 @@ function CoverageTab() {
 function DataSourcesTab() {
   return (
     <div>
-      <h3 className="panel-heading">Live Data Sources</h3>
+      <h3 className="panel-heading">Data Source References</h3>
+      <p className="panel-note">These endpoints are listed for future integration. This demo does not request live data from them.</p>
       {DATA_SOURCES.map((src, i) => (
         <div key={i} className="source-card">
           <div className="source-name">{src.name}</div>

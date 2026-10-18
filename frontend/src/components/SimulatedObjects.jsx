@@ -1,9 +1,10 @@
 import React from "react";
 import { Marker, Popup, Polygon, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import vesselsData from "../test-data/vessels.json";
-import researchData from "../test-data/research_tech.json";
-import mammalsData from "../test-data/marine_mammals.json";
+import vesselsData from "../../../test-data/vessels.json";
+import researchData from "../../../test-data/research_tech.json";
+import mammalsData from "../../../test-data/marine_mammals.json";
+import { researchStartPosition } from "../activity/researchPosition.js";
 
 // ── Status colour logic ────────────────────────────────────────────────────────
 
@@ -21,9 +22,9 @@ function vesselStatusColor(entry) {
   const st = entry.ais.status;
   const dq = entry.data_quality;
   if (dq && dq.ais_signal === "lost")     return "#ef4444"; // red — went silent
-  if (st === 0)  return "#22c55e"; // green — underway
   if (st === 5)  return "#94a3b8"; // grey  — moored
   if (st === 3)  return "#f59e0b"; // amber — restricted manoeuvrability
+  if (st === 0 || (st == null && entry.ais.speed > 0)) return "#22c55e"; // green — underway
   return "#94a3b8";
 }
 
@@ -35,17 +36,14 @@ const MAMMAL_COLOR = "#14b8a6";
 /**
  * Dot with a small status indicator in the top-right corner (vessels only).
  */
-function statusDotIcon(bodyColor, statusColor, dashed = false) {
-  const border = dashed
-    ? `border: 2px dashed ${bodyColor}; background: rgba(0,0,0,0.45);`
-    : `background: ${bodyColor};`;
+function statusDotIcon(bodyColor, statusColor) {
   return L.divIcon({
     className: "",
     html: `
       <div style="position:relative;width:14px;height:14px;">
         <div style="
           width:14px;height:14px;border-radius:50%;
-          ${border}
+          background:${bodyColor};
           box-shadow:0 0 4px rgba(0,0,0,.5);
         "></div>
         <div style="
@@ -122,10 +120,8 @@ export function VesselMarkers({ visible, positions }) {
     const { ais, schedule, data_quality: dq } = v;
     const pos = positions?.[v.entry_id] ?? [ais.lat, ais.lon];
     const statusColor = vesselStatusColor(v);
-    const isSubmerged = false;
-
     return (
-      <Marker key={v.entry_id} position={pos} icon={statusDotIcon("#e2e8f0", statusColor, isSubmerged)}>
+      <Marker key={v.entry_id} position={pos} icon={statusDotIcon("#e2e8f0", statusColor)}>
         <Tooltip direction="top" offset={[0, -8]} opacity={0.95} sticky>
           <strong>{ais.shipname}</strong>
         </Tooltip>
@@ -137,7 +133,7 @@ export function VesselMarkers({ visible, positions }) {
                 marginLeft: 6, padding: "1px 6px", borderRadius: 99,
                 background: statusColor, color: "#fff", fontSize: 10, fontWeight: 600
               }}>
-                {dq?.ais_signal === "lost" ? "AIS LOST" : ais.status_text ?? "—"}
+                {dq?.ais_signal === "lost" ? "AIS LOST" : ais.status_text ?? (ais.speed > 0 ? "UNDERWAY (INFERRED)" : "—")}
               </span>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -167,16 +163,11 @@ export function VesselMarkers({ visible, positions }) {
 export function ResearchMarkers({ visible, missionVisible, positions }) {
   if (!visible && !missionVisible) return null;
 
-  const entries = researchData.entries.filter(
-    (e) => (e.position?.lat || e.last_known?.lat)
-  );
+  return researchData.entries.map((e) => {
+    const start = researchStartPosition(e);
+    if (!start) return null;
 
-  return entries.map((e) => {
-    const staticLat = e.last_known?.lat ?? e.position?.lat;
-    const staticLon = e.last_known?.lon ?? e.position?.lon;
-    if (!staticLat || !staticLon) return null;
-
-    const pos = positions?.[e.entry_id] ?? [staticLat, staticLon];
+    const pos = positions?.[e.entry_id] ?? start;
     const statusColor = researchStatusColor(e);
     const isSubmerged = SUBMERGED_TYPES.has(e.platform_type);
     const hasMission = e.mission?.area?.coordinates;
@@ -190,7 +181,7 @@ export function ResearchMarkers({ visible, missionVisible, positions }) {
             pathOptions={{ color: "#a855f7", weight: 1.5, fillOpacity: 0.08, dashArray: "5 4" }}
           >
             <Tooltip sticky opacity={0.9}>
-              <strong>{e.name}</strong> — authorized mission area
+              <strong>{e.name}</strong> — declared mission area
             </Tooltip>
           </Polygon>
         )}
@@ -226,6 +217,9 @@ export function ResearchMarkers({ visible, missionVisible, positions }) {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
                     <tr><td style={{ color: "#666", paddingRight: 8 }}>Platform</td><td>{e.platform_type}</td></tr>
+                    {!e.last_known && !e.position && (
+                      <tr><td style={{ color: "#666" }}>Position</td><td>Mission area center (estimated)</td></tr>
+                    )}
                     <tr><td style={{ color: "#666" }}>Owner</td><td>{e.owner?.org}</td></tr>
                     {e.permit && (
                       <tr><td style={{ color: "#666" }}>Permit</td><td>{e.permit.ref} (exp {e.permit.valid_to})</td></tr>

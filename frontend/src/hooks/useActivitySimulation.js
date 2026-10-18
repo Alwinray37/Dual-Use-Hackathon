@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import vesselsData from "../test-data/vessels.json";
-import researchData from "../test-data/research_tech.json";
-import mammalsData from "../test-data/marine_mammals.json";
+import vesselsData from "../../../test-data/vessels.json";
+import researchData from "../../../test-data/research_tech.json";
+import mammalsData from "../../../test-data/marine_mammals.json";
+import { researchStartPosition } from "../activity/researchPosition.js";
 
 const TICK_MS = 2000;
 
@@ -93,9 +94,8 @@ function buildInitialPositions() {
 
   // Research tech
   for (const e of researchData.entries) {
-    const lat = e.last_known?.lat ?? e.position?.lat;
-    const lon = e.last_known?.lon ?? e.position?.lon;
-    if (lat && lon) pos[e.entry_id] = [lat, lon];
+    const start = researchStartPosition(e);
+    if (start) pos[e.entry_id] = start;
   }
 
   // Marine mammal sightings
@@ -133,9 +133,10 @@ const UUV_HEADING = 18; // degrees — NNE toward breakwater entrance
 
 // ── Main hook ──────────────────────────────────────────────────────────────────
 
-export default function useSimulation() {
+export default function useActivitySimulation() {
   const [positions, setPositions] = useState(() => buildInitialPositions());
-  const lawnRef = useRef(buildLawnmowerStates());
+  const lawnRef = useRef(null);
+  if (lawnRef.current === null) lawnRef.current = buildLawnmowerStates();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -150,7 +151,7 @@ export default function useSimulation() {
           if (dq?.ais_signal === "lost") {
             // Went silent — slow random drift, no heading
             next[v.entry_id] = randomWalk(lat, lon, 0.0001);
-          } else if (ais.status === 0 && ais.speed > 0) {
+          } else if ((ais.status === 0 || ais.status == null) && ais.speed > 0) {
             // Underway — follow course heading
             next[v.entry_id] = moveHeading(lat, lon, ais.speed, ais.course);
           } else if (ais.status === 3) {
