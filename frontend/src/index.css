@@ -462,43 +462,31 @@ body {
   .oc-buttons { grid-template-columns: 1fr; }
 }
 
-/* ── Resizable split: map on top, panel below ───────── */
+/* ── Resizable split: map left, panel right ───────── */
 .app { height: 100vh; min-height: 0; }
 .view-scroll { flex: 1; min-height: 0; overflow: auto; }
-.split { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.split-map { flex: 1; min-height: 0; padding: 8px 12px 0; }
-.split-map .map-shell { height: 100%; min-height: 0; width: 100%; margin: 0; }
-.activity-view { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; padding: 8px 12px 12px; }
-.activity-note { flex: none; margin: 0 0 8px; color: #8fb0c8; font-size: 12px; }
-.activity-view .map-shell { flex: 1 0 280px; height: auto; min-height: 280px; width: 100%; margin: 0; }
-.activity-view .map-legend { flex: none; margin: 0; }
+.split { flex: 1; min-height: 0; display: flex; flex-direction: row; }
+.split-map { flex: 1; min-width: 0; min-height: 0; padding: 8px 0 8px 12px; display: flex; flex-direction: column; }
+.split-map .map-shell { flex: 1; min-height: 0; width: 100%; margin: 0; height: auto; }
 .split-handle {
-  flex: none; height: 38px; display: flex; align-items: center; justify-content: center;
-  position: relative; cursor: ns-resize; touch-action: none; user-select: none;
-  background: #0f2233; border-top: 1px solid #1e3a52; margin-top: 8px;
+  flex: none; width: 14px; display: flex; align-items: center; justify-content: center;
+  cursor: ew-resize; touch-action: none; user-select: none;
+  background: #0f2233; border-left: 1px solid #1e3a52; border-right: 1px solid #1e3a52; margin-left: 8px;
 }
-.split-handle .grip { width: 64px; height: 5px; border-radius: 3px; background: #3a6585; }
+.split-handle .grip { width: 5px; height: 64px; border-radius: 3px; background: #3a6585; }
 .split-handle:hover .grip { background: #0a84ff; }
-.split-tools { position: absolute; right: 12px; top: 5px; display: flex; gap: 6px; align-items: center; cursor: default; }
+.split-panel { flex: none; overflow: hidden; background: #0b1520; display: flex; flex-direction: column; min-width: 0; }
+.split-tools { flex: none; display: flex; gap: 6px; padding: 8px 12px 0; }
 .split-tools button {
   font: inherit; font-size: 13px; padding: 3px 10px; cursor: pointer; color: #e8eef5;
   background: #17344d; border: 1px solid #2a4a66; border-radius: 6px;
 }
 .split-tools button:hover { background: #1f4565; }
-.split-tools .sep { width: 1px; height: 20px; background: #2a4a66; margin: 0 4px; }
-.split-panel { flex: none; overflow: hidden; background: #0b1520; }
-.split-panel-inner { overflow: hidden; }
-.split-panel .info-panel { margin: 0 12px 8px; height: calc(100% - 8px); display: flex; flex-direction: column; }
+.split-panel .info-panel { margin: 8px 12px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .split-panel .info-panel-tabs { flex: none; }
 .split-panel .info-panel-body { flex: 1; min-height: 0; max-height: none; overflow: auto; }
 .leaflet-container { font-size: 14px; }
 .leaflet-tooltip { font-size: 14px; }
 
-/* ── Larger text everywhere outside the resizable panel ── */
 .topbar, .simbar, .view-scroll { zoom: 1.25; }
 .layer-toggle, .recenter { zoom: 1.2; }
-.leaflet-container { font-size: 16px; }
-.leaflet-tooltip { font-size: 16px; }
-.split-tools button { font-size: 15px; }
-.split-handle { height: 44px; }
-.split-tools { top: 7px; }

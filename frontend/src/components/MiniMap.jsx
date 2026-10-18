@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Circle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { MANIFEST, SONAR_NODES } from "../sim/scenario.js";
 import { activeStatus, predictAhead } from "../sim/useSimulation.js";
@@ -29,7 +29,7 @@ export default function MiniMap({ sim, c, def }) {
         <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" />
         <Fit points={pts} tick={`${c.id}-${Math.floor(trail.length / 6)}`} />
         {MANIFEST.filter((m) => activeStatus(m, sim.t) === "active").map((m) => (
-          <Circle key={m.id} center={m.zone.center} radius={m.zone.radiusM} pathOptions={{ color: "#22c55e", weight: 1, dashArray: "4 4", fillOpacity: 0.08 }} />
+          <Polygon key={m.id} positions={m.zone.ring} pathOptions={{ color: "#22c55e", weight: 1, dashArray: "4 4", fillOpacity: 0.08 }} />
         ))}
         {SONAR_NODES.map((n) => (
           <Circle key={n.id} center={n.pos} radius={n.rangeM} pathOptions={{ color: "#a78bfa", weight: 1, fillOpacity: 0.03, opacity: sim.offline[n.id] ? 0.2 : 0.6 }} />

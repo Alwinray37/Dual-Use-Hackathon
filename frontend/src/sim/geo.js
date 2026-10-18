@@ -68,3 +68,32 @@ export function fmtClock(totalSeconds) {
   const p = (n) => String(n).padStart(2, "0");
   return `${p(h)}:${p(m)}:${p(sec)}`;
 }
+
+// Is point p ([lat, lng]) inside a polygon ring of [lat, lng] points? (ray casting)
+export function pointInRing(p, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [yi, xi] = ring[i];
+    const [yj, xj] = ring[j];
+    if (yi > p[0] !== yj > p[0] && p[1] < ((xj - xi) * (p[0] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// Distance in metres from point p to the nearest edge of a ring (flat-earth approximation).
+export function distToRingM(p, ring) {
+  const ky = 111320;
+  const kx = 111320 * Math.cos(toRad(p[0]));
+  let best = Infinity;
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    const b = ring[(i + 1) % ring.length];
+    const ax = (a[1] - p[1]) * kx, ay = (a[0] - p[0]) * ky;
+    const bx = (b[1] - p[1]) * kx, by = (b[0] - p[0]) * ky;
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2)) : 0;
+    best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+  }
+  return best;
+}

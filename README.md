@@ -50,8 +50,8 @@ An unauthorized autonomous vehicle is in a working harbor. Detecting small under
 
 Run the app with `cd frontend && npm install && npm run dev`.
 
-- `frontend/src/sim/`: three scripted Operations scenarios. `scenario.js` defines sample contacts, manifest entries, source documents, and four simulated sonar nodes. `useSimulation.js` advances contacts and `matcher.js` checks each contact against the manifest.
-- `test-data/`: canonical synthetic vessel, research asset, and marine mammal records. The Activity map imports these JSON files directly; `useActivitySimulation.js` animates positions and `SimulatedObjects.jsx` renders markers and details. Its 20 sonar nodes are display overlays, not inputs to the Operations matcher.
+- `frontend/src/sim/`: three scripted scenarios (quiet Tuesday, unexplained contact, partial match). `manifest.js` builds the single manifest from the `test-data/` JSON files. `scenario.js` defines sample contacts, source documents, and four simulated sonar nodes. `useSimulation.js` advances contacts and `matcher.js` checks each contact against the manifest.
+- `test-data/`: canonical synthetic vessel, research asset, and marine mammal records. The research entries become the sonar-checked manifest. Vessels, fixed sensors, and wildlife are counted and used to explain contacts but are not sonar-checked in the demo.
 - `frontend/src/map/harborGeography.js`: shared map reference locations and channel geometry.
 
-Both views use demo data. No live AIS, sonar, NOAA, or permit feed is connected. The Data Sources tab lists reference endpoints for future integration.
+The app uses demo data. No live AIS, sonar, NOAA, or permit feed is connected. The Reference map layer shows real buoy, tide gauge, and watch post locations for context only.

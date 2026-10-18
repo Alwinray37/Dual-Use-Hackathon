@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, Circle, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import { BUOYS, TIDE_GAUGES, WATCH_POSTS, BREAKWATER, CHANNEL_APPROACH, CHANNEL_LA, CHANNEL_LB } from "../map/harborGeography.js";
 import { Fragment, useState, useEffect } from "react";
@@ -76,9 +76,9 @@ function RecenterButton() {
   );
 }
 
-const LAYERS = ["buoys", "gauges", "watchPosts", "radii", "breakwater", "channel", "sonar", "zones", "contacts"];
-// Camera radii are large and clutter the demo, so they start hidden.
-const DEFAULT_OFF = ["radii"];
+// Four layers. "reference" is buoys, tide gauges and watch posts, hidden by default.
+const LAYERS = ["reference", "sonar", "zones", "contacts"];
+const DEFAULT_OFF = ["reference"];
 
 export default function HarborMap({ sim, onSelectContact }) {
   const [tiles, setTiles] = useState("street");
@@ -110,14 +110,14 @@ export default function HarborMap({ sim, onSelectContact }) {
         <TileLayer key={tiles} url={layer.url} attribution={layer.attribution} />
 
         {/* San Pedro Breakwater */}
-        {visible.breakwater && (
+        {(
           <Polyline positions={BREAKWATER} pathOptions={{ color: "#888", weight: 4, dashArray: "6 4" }}>
             <Popup>San Pedro Breakwater<br />3.1 miles, US Army Corps of Engineers</Popup>
           </Polyline>
         )}
 
         {/* Main shipping channel — approach + LA fork + LB fork */}
-        {visible.channel && (<>
+        {(<>
           <Polyline positions={CHANNEL_APPROACH} pathOptions={{ color: "#f59e0b", weight: 3, dashArray: "10 6", opacity: 0.9 }}>
             <Popup>Main Channel — Inbound Approach<br />Traffic separation zone to breakwater entrance</Popup>
           </Polyline>
@@ -130,7 +130,7 @@ export default function HarborMap({ sim, onSelectContact }) {
         </>)}
 
         {/* NDBC wave/weather buoys */}
-        {visible.buoys && BUOYS.map((b) => (
+        {visible.reference && BUOYS.map((b) => (
           <Marker key={b.id} position={b.pos} icon={dotIcon("#0a84ff", 0.45)}>
             <Popup>
               <strong>NOAA NDBC Buoy {b.id}</strong><br />
@@ -140,7 +140,7 @@ export default function HarborMap({ sim, onSelectContact }) {
         ))}
 
         {/* NOAA tide gauges */}
-        {visible.gauges && TIDE_GAUGES.map((g) => (
+        {visible.reference && TIDE_GAUGES.map((g) => (
           <Marker key={g.id} position={g.pos} icon={dotIcon("#06b6d4", 0.45)}>
             <Popup>
               <strong>NOAA Tide Gauge {g.id}</strong><br />
@@ -149,18 +149,8 @@ export default function HarborMap({ sim, onSelectContact }) {
           </Marker>
         ))}
 
-        {/* Harbor watch posts — detection radius rings */}
-        {visible.radii && WATCH_POSTS.map((w) => (
-          <Circle
-            key={`${w.id}-radius`}
-            center={w.pos}
-            radius={w.detectionRadius}
-            pathOptions={{ color: "#f97316", weight: 1.5, fillOpacity: 0.06, dashArray: "4 4" }}
-          />
-        ))}
-
         {/* Harbor watch posts — markers */}
-        {visible.watchPosts && WATCH_POSTS.map((w) => (
+        {visible.reference && WATCH_POSTS.map((w) => (
           <Marker key={w.id} position={w.pos} icon={dotIcon("#f97316")}>
             <Popup>
               <strong>{w.label.split("\n")[0]}</strong><br />
@@ -175,19 +165,18 @@ export default function HarborMap({ sim, onSelectContact }) {
         {/* Manifest zones: where expected underwater activity is */}
         {sim && visible.zones && MANIFEST.map((m) => {
           const st = activeStatus(m, sim.t);
-          const col = st === "active" ? "#22c55e" : "#64748b";
+          const col = st === "active" ? "#22c55e" : st === "expired" ? "#f59e0b" : "#64748b";
           return (
-            <Circle
+            <Polygon
               key={m.id}
-              center={m.zone.center}
-              radius={m.zone.radiusM}
+              positions={m.zone.ring}
               pathOptions={{ color: col, weight: 1.5, fillOpacity: st === "active" ? 0.1 : 0.04, dashArray: "5 5", opacity: st === "active" ? 0.9 : 0.55 }}
             >
               <Tooltip direction="top" sticky>
                 <strong>{m.id}</strong> {m.title}<br />
                 {m.window.start} to {m.window.end} ({st})
               </Tooltip>
-            </Circle>
+            </Polygon>
           );
         })}
 
@@ -246,28 +235,16 @@ export default function HarborMap({ sim, onSelectContact }) {
       </div>
     </div>
     <div className="map-legend">
-      <button className={`legend-item legend-toggle${visible.buoys ? " on" : ""}`} onClick={() => toggle("buoys")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#0a84ff", display: "inline-block", flexShrink: 0 }} />
-        NDBC Wave Buoy
-      </button>
-      <button className={`legend-item legend-toggle${visible.gauges ? " on" : ""}`} onClick={() => toggle("gauges")}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#06b6d4", display: "inline-block", flexShrink: 0 }} />
-        NOAA Tide Gauge
-      </button>
-      <button className={`legend-item legend-toggle${visible.watchPosts ? " on" : ""}`} onClick={() => toggle("watchPosts")}>
+      <button className={`legend-item legend-toggle${visible.reference ? " on" : ""}`} onClick={() => toggle("reference")}>
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f97316", display: "inline-block", flexShrink: 0 }} />
-        Watch post
-      </button>
-      <button className={`legend-item legend-toggle${visible.radii ? " on" : ""}`} onClick={() => toggle("radii")}>
-        <svg width="20" height="14"><circle cx="10" cy="7" r="6" fill="none" stroke="#f97316" strokeWidth="1.5" strokeDasharray="3 3" /></svg>
-        Camera radius (est.)
+        Reference (buoys, tide gauges, watch posts)
       </button>
       <button className={`legend-item legend-toggle${visible.sonar ? " on" : ""}`} onClick={() => toggle("sonar")}>
         <span className="legend-sonar" />
         Sonar node (simulated)
       </button>
       <button className={`legend-item legend-toggle${visible.zones ? " on" : ""}`} onClick={() => toggle("zones")}>
-        <svg width="20" height="14"><circle cx="10" cy="7" r="6" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3 3" /></svg>
+        <svg width="20" height="14"><rect x="3" y="2" width="14" height="10" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3 3" /></svg>
         Manifest zone
       </button>
       <button className={`legend-item legend-toggle${visible.contacts ? " on" : ""}`} onClick={() => toggle("contacts")}>
@@ -275,14 +252,6 @@ export default function HarborMap({ sim, onSelectContact }) {
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", display: "inline-block", flexShrink: 0 }} />
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", display: "inline-block", flexShrink: 0 }} />
         Contacts: checking / cleared / needs decision
-      </button>
-      <button className={`legend-item legend-toggle${visible.breakwater ? " on" : ""}`} onClick={() => toggle("breakwater")}>
-        <span style={{ width: 24, height: 3, background: "#888", display: "inline-block", flexShrink: 0 }} />
-        Breakwater
-      </button>
-      <button className={`legend-item legend-toggle${visible.channel ? " on" : ""}`} onClick={() => toggle("channel")}>
-        <span style={{ width: 24, height: 3, background: "#f59e0b", display: "inline-block", flexShrink: 0 }} />
-        Shipping Channel
       </button>
     </div>
     </>

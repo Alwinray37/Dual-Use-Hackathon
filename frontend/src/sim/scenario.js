@@ -1,13 +1,14 @@
 import { offset } from "./geo.js";
+import { MANIFEST } from "./manifest.js";
+
+// The manifest itself lives in manifest.js and is built from /test-data.
+export { MANIFEST, WILDLIFE, OTHER_KNOWN, CLOCK_START_MIN } from "./manifest.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ALL DEMO DATA IS SAMPLE / SIMULATED. Company names, permit numbers and crew
 // names are invented for the demo. Sonar nodes are simulated: detection is a
 // solved input, the product is the decision layer on top of it.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// Wall clock at sim t = 0 (minutes since midnight). 10:40 AM.
-export const CLOCK_START_MIN = 10 * 60 + 40;
 
 // Conservative estimate. Vendor claims for commercial harbor sonar run up to
 // about 1,500 m for small vehicles; ~600-900 m is typical in real harbors.
@@ -26,110 +27,58 @@ export const SONAR_NODES = [
 ];
 
 // ── Raw, messy sources a harbor really receives ──────────────────────────────
+// Each manifest entry in test-data/research_tech.json lists the documents it
+// was assembled from in `source_docs`. Times below are harbor local time.
 export const SOURCES = [
   {
     id: "S-1",
     kind: "Email",
-    title: "FW: FW: dive notif for today, berth work",
-    raw: `From: dispatch@harborhull.example
+    title: "FW: FW: dive notif for today, pier work",
+    raw: `From: dispatch@marinecontractors.example
 To: portops@harbor.example
-Subject: FW: FW: dive notif for today - berth work
+Subject: FW: FW: dive notif for today - pier work
 
 Hi Port Ops,
 
-Just confirming our crew (2 divers, Marco + Dee) will be doing the
-hull clean on the Pacific Dawn at Berth 3 today, 0800 to about 4pm.
-A flag will be up and we have a RIB alongside. BMP brushes only, no
-abrasive. Max depth 8m.
-
-Also the nav buoy dive for the east channel marker got done early,
-that was 0600-0930. All good.
+Confirming our crew (2 divers) will be doing the piling
+inspection at the Berth 3 pier today, 1330 to about 1630.
+Dive flag will be up and we have a RIB alongside.
+Max depth 10m.
 
 Thx, Dispatch`,
   },
   {
     id: "S-2",
     kind: "Permit PDF",
-    title: "Diving & Waterside Activity Permit WP-2291",
-    raw: `DIVING AND WATERSIDE ACTIVITY PERMIT      No. WP-2291
-Requestor:   Port Engineering - Waterfront Facilities
+    title: "Diving & Waterside Activity Permit SYN-PRM-2303",
+    raw: `DIVING AND WATERSIDE ACTIVITY PERMIT      No. SYN-PRM-2303
+Requestor:   Pacific Harbor Marine Institute
 Location:    Berth 5 pier, pilings P12 to P30
-Date:        Today        From: 1000     To: 1400
+Date:        Today        From: 1300     To: 1700
 Equipment:   Tethered ROV (observation class)
-             surface support from pier
-Max depth:   6 m
+             surface support: R/V Harbor Test
+Max depth:   8 m
+Valid:       Oct 15 to Oct 20
 Harbor Master approval:  [X]
 Port Security notified:  [X]`,
   },
   {
     id: "S-3",
     kind: "Spreadsheet",
-    title: "marine_lab_schedule.xlsx (shared sheet)",
+    title: "research_schedule.xlsx (shared sheet)",
     raw: `asset,owner,area,start,end,notes
-Kelp-3 (AUV),Marine Sci Lab,Outer harbor test box B,13:00,17:00,"lawnmower survey, 2-3 kt, pinger 12kHz"
-Kelp-2 (AUV),Marine Sci Lab,(in dry dock),,,"not deployed this week"`,
+SurveyBot-3 (AUV),Pacific Harbor Marine Institute,Outer harbor test box B,12:00,16:00,"lawnmower survey, about 2 kt"
+DriftBot-1 (AUV),Coastal Survey Lab,Channel mouth test box A,07:00,11:00,"transect line, about 1.5 kt, recover at 11:00"
+ProbeBot-2 (AUV),Visiting University Team,East channel marker,13:00,16:00,"grid survey, permit SYN-PRM-2188 (check dates)"`,
   },
   {
     id: "S-4",
     kind: "Radio log",
     title: "Port Control VHF 12 log",
-    raw: `10:12  PORT CONTROL: Pacific Dawn dive crew radio check
-10:12  DIVE SUP: divers entering the water Berth 3, A flag up
-10:31  PORT CONTROL: copy, tug transit Berth 3 area 1100`,
-  },
-];
-
-// ── Parsed manifest ("expected underwater activity today") ───────────────────
-// zone: where it is expected. window: when. expect: what the sonar should see.
-export const MANIFEST = [
-  {
-    id: "M-001",
-    title: "Hull cleaning, Pacific Dawn (Berth 3)",
-    activity: "Hull cleaning",
-    who: "Harbor Hull Services (2 divers)",
-    zone: { center: [33.72893, -118.26988], radiusM: 220 },
-    window: { start: "08:00", end: "16:00" },
-    expect: { classes: ["diver"], speedKt: [0, 1.5] },
-    sources: ["S-1", "S-4"],
-    trust: "Notified + radio check-in",
-    trustLevel: 3,
-    checkIn: "10:12",
-  },
-  {
-    id: "M-002",
-    title: "Pier piling inspection, Berth 5",
-    activity: "Pier inspection",
-    who: "Port Engineering (tethered ROV)",
-    zone: { center: [33.72142, -118.26752], radiusM: 220 },
-    window: { start: "10:00", end: "14:00" },
-    expect: { classes: ["small-vehicle"], speedKt: [0, 1.5] },
-    sources: ["S-2"],
-    trust: "Permit on file",
-    trustLevel: 3,
-  },
-  {
-    id: "M-003",
-    title: "Research AUV trial, Kelp-3 (test box B)",
-    activity: "Research vehicle",
-    who: "Marine Sci Lab",
-    zone: { center: [33.70446, -118.24461], radiusM: 350 },
-    window: { start: "13:00", end: "17:00" },
-    expect: { classes: ["small-vehicle"], speedKt: [1, 4] },
-    sources: ["S-3"],
-    trust: "Shared schedule (unverified)",
-    trustLevel: 1,
-  },
-  {
-    id: "M-004",
-    title: "Nav buoy maintenance dive, east channel marker",
-    activity: "Buoy maintenance",
-    who: "Harbor Hull Services",
-    zone: { center: [33.69492, -118.24515], radiusM: 200 },
-    window: { start: "06:00", end: "09:30" },
-    expect: { classes: ["diver"], speedKt: [0, 1] },
-    sources: ["S-1"],
-    trust: "Emailed notice",
-    trustLevel: 2,
+    raw: `10:40  SURVEY LAB: DriftBot-1 last modem ping, test box A, recovery at 1100
+13:41  PORT CONTROL: Berth 3 dive crew radio check
+13:41  DIVE SUP: divers entering the water, A flag up
+13:55  PORT CONTROL: copy, ROV launch at Berth 5, R/V Harbor Test tending`,
   },
 ];
 
@@ -137,9 +86,11 @@ export const MANIFEST = [
 // Paths are time-compressed for the demo: the contact moves along `waypoints`
 // over `duration` sim-seconds, while `speedKt` is the nominal speed the sonar
 // track reports (what the manifest behavior check uses).
-const z1 = MANIFEST[0].zone.center;
-const z2 = MANIFEST[1].zone.center;
-const z3 = MANIFEST[2].zone.center;
+const zoneOf = (id) => MANIFEST.find((m) => m.id === id).zone.center;
+const diverZone = zoneOf("RT-011");
+const rovZone = zoneOf("RT-009");
+const surveyZone = zoneOf("RT-007");
+const driftZone = zoneOf("RT-008");
 
 const routineDiver = {
   id: "C-01",
@@ -147,23 +98,34 @@ const routineDiver = {
   speedKt: 0.6,
   startT: 1,
   duration: 90,
-  waypoints: [offset(z1, -60, 20), offset(z1, 10, 60), offset(z1, 70, -10), offset(z1, 0, -50)],
-  truth: "Hull-cleaning diver at Berth 3 (matches manifest M-001).",
+  waypoints: [offset(diverZone, -60, 20), offset(diverZone, 10, 60), offset(diverZone, 70, -10), offset(diverZone, 0, -50)],
+  truth: "Pier piling dive team at Berth 3 (matches manifest RT-011).",
 };
 
 const routineRov = {
   id: "C-02",
   sonarClass: "small-vehicle",
-  speedKt: 0.8,
+  speedKt: 0.5,
   startT: 3,
   duration: 90,
-  waypoints: [offset(z2, -80, 10), offset(z2, -20, -30), offset(z2, 50, 20), offset(z2, 90, -10)],
-  truth: "Tethered ROV inspecting Berth 5 pilings (matches manifest M-002).",
+  waypoints: [offset(rovZone, -80, 10), offset(rovZone, -20, -30), offset(rovZone, 50, 20), offset(rovZone, 90, -10)],
+  truth: "PierEye ROV inspecting Berth 5 pilings (matches manifest RT-009).",
+};
+
+const surveyBot = {
+  id: "C-04",
+  sonarClass: "small-vehicle",
+  speedKt: 2.0,
+  startT: 5,
+  duration: 120,
+  waypoints: [offset(surveyZone, -160, -110), offset(surveyZone, 140, -90), offset(surveyZone, 150, 100), offset(surveyZone, -120, 120)],
+  truth: "SurveyBot-3 on its lawnmower survey in test box B (matches manifest RT-007).",
 };
 
 const seaLion = {
   id: "C-03",
   sonarClass: "marine-animal",
+  speciesId: "M-001",
   speedKt: 2.2,
   startT: 7,
   duration: 60,
@@ -192,14 +154,14 @@ const unknownVehicle = {
   truth: "Small unregistered autonomous vehicle entering past the breakwater and up the main channel.",
 };
 
-const researchEarly = {
+const driftBot = {
   id: "C-05",
   sonarClass: "small-vehicle",
-  speedKt: 2.5,
+  speedKt: 1.5,
   startT: 10,
   duration: 150,
-  waypoints: [offset(z3, -160, -110), offset(z3, 140, -90), offset(z3, 150, 100), offset(z3, -120, 120)],
-  truth: "The research lab's Kelp-3 AUV, started its trial hours before its scheduled window.",
+  waypoints: [offset(driftZone, -140, -100), offset(driftZone, 120, -80), offset(driftZone, 130, 90), offset(driftZone, -110, 100)],
+  truth: "DriftBot-1, due out of the water at 11:00 and still in it four hours later (manifest RT-008).",
 };
 
 export const SCENARIOS = [
@@ -207,8 +169,8 @@ export const SCENARIOS = [
     id: "quiet",
     label: "1. Quiet Tuesday",
     blurb:
-      "Routine day. Everything is on the manifest, so the officer is never bothered. A sea lion is logged for wildlife awareness.",
-    contacts: [routineDiver, routineRov, seaLion],
+      "Routine day. Divers, an ROV and a research AUV are all on the manifest, so the officer is never bothered. A sea lion is logged for wildlife awareness.",
+    contacts: [routineDiver, routineRov, surveyBot, seaLion],
   },
   {
     id: "unexplained",
@@ -221,8 +183,8 @@ export const SCENARIOS = [
     id: "partial",
     label: "3. Partial match",
     blurb:
-      "Right place, right type, right speed, wrong time. A simple lookup would clear or flag it blindly. The system hands it over with the reason.",
-    contacts: [routineDiver, routineRov, researchEarly],
+      "Right place, right type, right speed, wrong time: the research AUV DriftBot-1 was due out of the water four hours ago. A simple lookup would clear or flag it blindly. The system hands it over with the reason.",
+    contacts: [routineDiver, routineRov, driftBot],
   },
 ];
 

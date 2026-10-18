@@ -252,7 +252,7 @@
         "draught": 2.0, "destination": "", "eta": "00-00T24:60Z",
         "status": 5, "status_text": "Moored",
         "speed": 0.0, "course": 0.0, "heading": 90,
-        "lat": 33.7500, "lon": -118.2680, "accuracy": true
+        "lat": 33.7210, "lon": -118.2690, "accuracy": true
       },
       "derived": { "loa_m": 24, "beam_m": 8 },
       "schedule": {

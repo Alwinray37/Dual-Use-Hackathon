@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { CLASS_LABEL, MANIFEST, SOURCES } from "../sim/scenario.js";
+import { CLASS_LABEL, MANIFEST, OTHER_KNOWN, SOURCES } from "../sim/scenario.js";
 import { activeStatus } from "../sim/useSimulation.js";
 
-const STATUS_COLOR = { active: "#22c55e", upcoming: "#64748b", ended: "#475569" };
-const STATUS_LABEL = { active: "Active now", upcoming: "Upcoming", ended: "Ended" };
+const STATUS_COLOR = { active: "#22c55e", upcoming: "#64748b", ended: "#475569", expired: "#f59e0b" };
+const STATUS_LABEL = { active: "Active now", upcoming: "Upcoming", ended: "Ended", expired: "Permit expired" };
 
 export function ManifestTable({ sim, highlight, onPick }) {
   return (
@@ -31,7 +31,7 @@ export function ManifestTable({ sim, highlight, onPick }) {
               <td><code>{m.id}</code></td>
               <td>
                 {m.title}
-                <div className="cc-win">{m.who} &middot; zone {m.zone.radiusM} m</div>
+                <div className="cc-win">{m.who} &middot; declared area</div>
               </td>
               <td>{m.window.start} to {m.window.end}</td>
               <td>
@@ -96,6 +96,11 @@ export default function ManifestBoard({ sim }) {
           <h3 className="panel-heading">One clean board out</h3>
           <ManifestTable sim={sim} highlight={highlight} onPick={(m) => setSel(m.sources[0])} />
           <p className="panel-note" style={{ marginTop: "0.9rem" }}>
+            <strong>Also in the manifest data, not sonar-checked in this demo:</strong> {OTHER_KNOWN.surfaceCraft} surface
+            vessels and craft (tracked by AIS and VTS), {OTHER_KNOWN.fixedSensors} fixed sensors, and {OTHER_KNOWN.wildlife} wildlife
+            species (used to explain animal contacts).
+          </p>
+          <p className="panel-note">
             <strong>Trust levels matter.</strong> A permit the Harbor Master approved counts for more than a shared
             spreadsheet. A match only clears routine behavior that fits the claimed job, every clearing is logged for
             review, and "expected" never means "safe". The manifest is context for a person, not an authority over one.

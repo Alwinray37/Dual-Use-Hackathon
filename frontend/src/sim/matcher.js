@@ -1,4 +1,4 @@
-import { distanceM, fmtDist } from "./geo.js";
+import { distanceM, distToRingM, fmtDist, pointInRing } from "./geo.js";
 import { CLASS_LABEL } from "./scenario.js";
 
 const toMin = (hhmm) => {
@@ -19,10 +19,9 @@ const fmtMinutes = (min) => {
 export function evaluateContact({ pos, sonarClass, speedKt }, clockMin, manifest) {
   return manifest.map((entry) => {
     const d = distanceM(pos, entry.zone.center);
-    const where =
-      d <= entry.zone.radiusM
-        ? { pass: true, detail: `Inside site zone (${fmtDist(d)} from centre)` }
-        : { pass: false, detail: `${fmtDist(d)} from site (zone is ${entry.zone.radiusM} m)` };
+    const where = pointInRing(pos, entry.zone.ring)
+      ? { pass: true, detail: "Inside the declared area" }
+      : { pass: false, detail: `${fmtDist(distToRingM(pos, entry.zone.ring))} outside the declared area` };
 
     const start = toMin(entry.window.start);
     const end = toMin(entry.window.end);
@@ -33,6 +32,10 @@ export function evaluateContact({ pos, sonarClass, speedKt }, clockMin, manifest
       when = { pass: false, detail: `Window starts ${entry.window.start} (in ${fmtMinutes(start - clockMin)})` };
     } else {
       when = { pass: false, detail: `Window ended ${entry.window.end} (${fmtMinutes(clockMin - end)} ago)` };
+    }
+    // A window only counts if the paperwork behind it is still valid.
+    if (when.pass && entry.permit && entry.permit.expired) {
+      when = { pass: false, detail: `Window is active but permit ${entry.permit.ref} expired ${entry.permit.validTo}` };
     }
 
     const what = entry.expect.classes.includes(sonarClass)

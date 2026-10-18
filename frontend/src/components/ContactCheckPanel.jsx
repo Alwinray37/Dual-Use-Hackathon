@@ -45,8 +45,8 @@ function VerdictBanner({ c }) {
       : "No manifest match. Sent to the watch officer. The system stops here.";
   return (
     <div className="verdict alert">
-      <strong>{v.type === "partial" ? "Needs a decision." : v.type === "lost" ? "Needs a decision." : "Unexplained."}</strong> {text}
-      <span className="verdict-hint">See the Officer view tab for what the officer sees.</span>
+      <strong>Needs a decision.</strong> {text}
+      <span className="verdict-hint">See the Officer view for what the officer sees.</span>
     </div>
   );
 }

@@ -5,7 +5,7 @@
     "as_of": "2026-10-17T22:00:00Z",
     "synthetic": true,
     "provenance": {
-      "fixed_public_stations": "RT-001 to RT-003 use real station IDs found in search results (NOAA CO-OPS 9410660; CDIP 092 / NDBC 46222; CDIP 213). Positions are approximate and unverified. Everything else about them is a simplification",
+      "fixed_public_stations": "RT-001 uses a real NOAA CO-OPS station ID (9410660). Two San Pedro wave buoy records (CDIP 092 / NDBC 46222 and CDIP 213) were removed: a live NDBC check by teammates found 46222 is not an active station and 213 was never verified",
       "mobile_vehicle_records": "INVENTED STRUCTURE. No public manifest for underwater research vehicles was found. Fields are modeled on what a permit plus mission plan would plausibly contain",
       "organizations_and_names": "Invented. 'Pacific Harbor Marine Institute' and others are fictional and do not represent real institutions",
       "sizes": "Approximate, in the range of small AUV classes. The Navy harbor-detection topic uses a Remus 100-size object as its reference target"
@@ -22,44 +22,12 @@
       "platform_type": "tide_gauge",
       "mobility": "fixed",
       "owner": { "org": "NOAA CO-OPS", "contact_role": "station operations" },
-      "position": { "lat": 33.72, "lon": -118.27, "verified": false },
+      "position": { "lat": 33.72, "lon": -118.272, "verified": true },
       "measures": ["water_level"],
       "physical": { "size_note": "pier-mounted, near surface" },
       "signature": { "emits_acoustic": false },
       "status": "active",
-      "notes": "Real station ID. A 1-minute raw tsunami water level dataset exists for it per data.gov catalog. Position approximate."
-    },
-    {
-      "entry_id": "RT-002",
-      "category": "research_tech",
-      "synthetic": false,
-      "name": "San Pedro wave buoy",
-      "station_id": "CDIP 092 / NDBC 46222",
-      "platform_type": "wave_buoy",
-      "mobility": "fixed",
-      "owner": { "org": "CDIP (Scripps)", "contact_role": "data operations" },
-      "position": { "lat": 33.62, "lon": -118.32, "verified": false },
-      "measures": ["wave_height", "wave_period", "sea_temperature"],
-      "physical": { "size_note": "surface buoy with mooring line" },
-      "signature": { "emits_acoustic": false },
-      "status": "active",
-      "notes": "Real station IDs from search results. Outside the breakwater, included to show adjacent fixed assets. Position and measures are approximate."
-    },
-    {
-      "entry_id": "RT-003",
-      "category": "research_tech",
-      "synthetic": false,
-      "name": "San Pedro South wave buoy",
-      "station_id": "CDIP 213",
-      "platform_type": "wave_buoy",
-      "mobility": "fixed",
-      "owner": { "org": "CDIP (Scripps)", "contact_role": "data operations" },
-      "position": { "lat": 33.58, "lon": -118.25, "verified": false },
-      "measures": ["wave_height", "wave_period"],
-      "physical": { "size_note": "surface buoy with mooring line" },
-      "signature": { "emits_acoustic": false },
-      "status": "active",
-      "notes": "Real station name from search results. Position approximate and unverified."
+      "notes": "Real station ID. Position taken from the project map data, which its authors report checking against the CO-OPS API. A 1-minute raw tsunami water level dataset exists for it per data.gov catalog."
     },
     {
       "entry_id": "RT-004",
@@ -112,13 +80,14 @@
       "category": "research_tech",
       "synthetic": true,
       "name": "SurveyBot-3",
+      "source_docs": ["S-3"],
       "platform_type": "auv",
       "mobility": "mobile",
       "owner": { "org": "Pacific Harbor Marine Institute (synthetic)", "contact_role": "field operations" },
       "permit": { "ref": "SYN-PRM-2301", "issued_by": "port authority (synthetic)", "valid_from": "2026-10-01", "valid_to": "2026-11-30" },
       "mission": {
         "window": { "start": "2026-10-17T19:00:00Z", "end": "2026-10-17T23:00:00Z" },
-        "area": { "type": "Polygon", "coordinates": [[[-118.262, 33.728], [-118.252, 33.728], [-118.252, 33.736], [-118.262, 33.736], [-118.262, 33.728]]] },
+        "area": { "type": "Polygon", "coordinates": [[[-118.24841, 33.70126], [-118.24081, 33.70126], [-118.24081, 33.70766], [-118.24841, 33.70766], [-118.24841, 33.70126]]] },
         "depth_m": { "min": 2, "max": 12 },
         "planned_speed_kts": 2.0,
         "pattern": "lawnmower survey"
@@ -128,7 +97,7 @@
       "identification": { "methods": ["acoustic_modem_id"], "modem_id": "SYN-MODEM-0307", "verified_standard": false },
       "deployed_from": "V-013",
       "status": "on_mission",
-      "last_known": { "time": "2026-10-17T21:58:00Z", "lat": 33.7310, "lon": -118.2570, "source": "acoustic tracking from tender" },
+      "last_known": { "time": "2026-10-17T21:58:00Z", "lat": 33.7045, "lon": -118.2450, "source": "acoustic tracking from tender" },
       "notes": "Normal case: contact inside its mission area and window. Should be Cleared."
     },
     {
@@ -136,13 +105,14 @@
       "category": "research_tech",
       "synthetic": true,
       "name": "DriftBot-1",
+      "source_docs": ["S-3", "S-4"],
       "platform_type": "auv",
       "mobility": "mobile",
       "owner": { "org": "Coastal Survey Lab (synthetic)", "contact_role": "field operations" },
       "permit": { "ref": "SYN-PRM-2302", "issued_by": "port authority (synthetic)", "valid_from": "2026-10-10", "valid_to": "2026-10-31" },
       "mission": {
         "window": { "start": "2026-10-17T14:00:00Z", "end": "2026-10-17T18:00:00Z" },
-        "area": { "type": "Polygon", "coordinates": [[[-118.275, 33.712], [-118.265, 33.712], [-118.265, 33.72], [-118.275, 33.72], [-118.275, 33.712]]] },
+        "area": { "type": "Polygon", "coordinates": [[[-118.264, 33.7125], [-118.258, 33.7125], [-118.258, 33.7175], [-118.264, 33.7175], [-118.264, 33.7125]]] },
         "depth_m": { "min": 2, "max": 10 },
         "planned_speed_kts": 1.5,
         "pattern": "transect line"
@@ -152,7 +122,7 @@
       "identification": { "methods": ["acoustic_modem_id"], "modem_id": "SYN-MODEM-0412", "verified_standard": false },
       "recovery_aids": ["acoustic pinger", "surface strobe", "owner call number"],
       "status": "overdue",
-      "last_known": { "time": "2026-10-17T17:40:00Z", "lat": 33.7160, "lon": -118.2700, "source": "last acoustic contact" },
+      "last_known": { "time": "2026-10-17T17:40:00Z", "lat": 33.7148, "lon": -118.2606, "source": "last acoustic contact" },
       "notes": "Quiet Tuesday case: mission window ended four hours ago, no contact since. A drifting contact near the last known position is probably this vehicle. Notify the owner, not an alarm."
     },
     {
@@ -160,13 +130,14 @@
       "category": "research_tech",
       "synthetic": true,
       "name": "PierEye ROV",
+      "source_docs": ["S-2", "S-4"],
       "platform_type": "rov",
       "mobility": "mobile",
       "owner": { "org": "Pacific Harbor Marine Institute (synthetic)", "contact_role": "field operations" },
       "permit": { "ref": "SYN-PRM-2303", "issued_by": "port authority (synthetic)", "valid_from": "2026-10-15", "valid_to": "2026-10-20" },
       "mission": {
         "window": { "start": "2026-10-17T20:00:00Z", "end": "2026-10-18T00:00:00Z" },
-        "area": { "type": "Polygon", "coordinates": [[[-118.271, 33.7485], [-118.265, 33.7485], [-118.265, 33.752], [-118.271, 33.752], [-118.271, 33.7485]]] },
+        "area": { "type": "Polygon", "coordinates": [[[-118.26972, 33.71962], [-118.26532, 33.71962], [-118.26532, 33.72322], [-118.26972, 33.72322], [-118.26972, 33.71962]]] },
         "depth_m": { "min": 0, "max": 8 },
         "planned_speed_kts": 0.5,
         "pattern": "pier piling inspection"
@@ -175,7 +146,7 @@
       "signature": { "emits_acoustic": true, "note": "thrusters, imaging sonar" },
       "identification": { "methods": ["tethered_to_tender"], "tender": "V-013" },
       "status": "on_mission",
-      "last_known": { "time": "2026-10-17T21:55:00Z", "lat": 33.7500, "lon": -118.2680, "source": "tender GPS plus tether offset" },
+      "last_known": { "time": "2026-10-17T21:55:00Z", "lat": 33.7213, "lon": -118.2674, "source": "tender GPS plus tether offset" },
       "notes": "Slow, small, near piers. Easy to confuse with a small vehicle if the tender is not in the data."
     },
     {
@@ -206,13 +177,15 @@
       "category": "research_tech",
       "synthetic": true,
       "name": "Pier piling dive team",
+      "source_docs": ["S-1", "S-4"],
+      "check_in": "2026-10-17T20:41:00Z",
       "platform_type": "dive_operation",
       "mobility": "mobile",
       "owner": { "org": "Synthetic Marine Contractors", "contact_role": "dive supervisor" },
       "permit": { "ref": "SYN-PRM-2305", "issued_by": "port authority (synthetic)", "valid_from": "2026-10-17", "valid_to": "2026-10-17" },
       "mission": {
         "window": { "start": "2026-10-17T20:30:00Z", "end": "2026-10-17T23:30:00Z" },
-        "area": { "type": "Polygon", "coordinates": [[[-118.2765, 33.7415], [-118.2745, 33.7415], [-118.2745, 33.7430], [-118.2765, 33.7430], [-118.2765, 33.7415]]] },
+        "area": { "type": "Polygon", "coordinates": [[[-118.27208, 33.72713], [-118.26768, 33.72713], [-118.26768, 33.73073], [-118.27208, 33.73073], [-118.27208, 33.72713]]] },
         "depth_m": { "min": 0, "max": 10 },
         "planned_speed_kts": 0.5,
         "pattern": "pier inspection"
@@ -221,7 +194,7 @@
       "signature": { "emits_acoustic": false, "bubble_trail": true, "note": "open-circuit scuba, bubble trail, weak echo" },
       "identification": { "methods": ["dive_flag", "tender_vessel_ais"], "verified_standard": false },
       "status": "on_mission",
-      "last_known": { "time": "2026-10-17T21:50:00Z", "lat": 33.7422, "lon": -118.2755, "source": "dive supervisor report" },
+      "last_known": { "time": "2026-10-17T21:50:00Z", "lat": 33.7289, "lon": -118.2699, "source": "dive supervisor report" },
       "notes": "Human divers are a legitimate, declared contact. Diver detection sonar is built to find divers, so this should match and clear."
     },
     {
@@ -229,13 +202,14 @@
       "category": "research_tech",
       "synthetic": true,
       "name": "ProbeBot-2",
+      "source_docs": ["S-3"],
       "platform_type": "auv",
       "mobility": "mobile",
       "owner": { "org": "Visiting University Team (synthetic)", "contact_role": "principal investigator" },
       "permit": { "ref": "SYN-PRM-2188", "issued_by": "port authority (synthetic)", "valid_from": "2026-10-05", "valid_to": "2026-10-16" },
       "mission": {
         "window": { "start": "2026-10-17T20:00:00Z", "end": "2026-10-17T23:00:00Z" },
-        "area": { "type": "Polygon", "coordinates": [[[-118.285, 33.705], [-118.275, 33.705], [-118.275, 33.711], [-118.285, 33.711], [-118.285, 33.705]]] },
+        "area": { "type": "Polygon", "coordinates": [[[-118.24755, 33.69292], [-118.24275, 33.69292], [-118.24275, 33.69692], [-118.24755, 33.69692], [-118.24755, 33.69292]]] },
         "depth_m": { "min": 2, "max": 10 },
         "planned_speed_kts": 2.0,
         "pattern": "grid survey"

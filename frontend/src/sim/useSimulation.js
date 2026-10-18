@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { bearingDeg, compass, destination, distanceM, fmtClock, fmtPos, lerp, KT_TO_MS } from "./geo.js";
-import { CLOCK_START_MIN, MANIFEST, SCENARIOS, SONAR_NODES } from "./scenario.js";
+import { CLOCK_START_MIN, MANIFEST, SCENARIOS, SONAR_NODES, WILDLIFE } from "./scenario.js";
 import { evaluateContact, verdictFrom } from "./matcher.js";
 
 // Timing, in sim seconds.
@@ -130,7 +130,9 @@ function step(prev, def, t, s, log) {
     if (def.sonarClass === "marine-animal" && t - c.firstSeenT >= ANIMAL_S) {
       c.stage = "discarded";
       c.verdict = { type: "animal" };
-      log.push({ t, id: def.id, kind: "ok", text: `${def.id}: classified as marine animal. Not tracked as a vehicle, logged for wildlife awareness.` });
+      const sp = def.speciesId ? WILDLIFE[def.speciesId] : null;
+      const what = sp ? `a ${sp.common_name.toLowerCase()} (expected around ${sp.expected_habitat.slice(0, 3).join(", ")})` : "marine animal";
+      log.push({ t, id: def.id, kind: "ok", text: `${def.id}: classified as ${what}. Not tracked as a vehicle, logged for wildlife awareness.` });
     } else if (t - c.firstSeenT >= CONFIRM_S || c.nodesSeen.length >= 2) {
       c.stage = "tracking";
       c.confirmT = t;
@@ -303,6 +305,7 @@ export const STAGE_STYLE = {
 };
 
 export function activeStatus(entry, t) {
+  if (entry.permit && entry.permit.expired) return "expired";
   const clockMin = CLOCK_START_MIN + t / 60;
   const [sh, sm] = entry.window.start.split(":").map(Number);
   const [eh, em] = entry.window.end.split(":").map(Number);

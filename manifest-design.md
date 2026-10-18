@@ -25,6 +25,8 @@ Each harbor group has its own record of what it has in the water. Our system com
 
 Unknown always defaults to **Watch**, never to Cleared. Work stops at the handoff to a human.
 
+> In the demo app this is simplified to two states: **Cleared** and **Needs a decision**. Watch is the officer's "keep watching" action on a contact that needs a decision.
+
 ---
 
 ## 2. Three categories, three different ways of "belonging"
@@ -62,7 +64,6 @@ Notes:
 | Source | What it gives | Provenance |
 |---|---|---|
 | NOAA CO-OPS station 9410660 (Los Angeles, Outer Harbor) | A real fixed tide gauge | Sourced (search result) |
-| CDIP / NDBC San Pedro buoy (092 / 46222) and San Pedro South (213) | Real fixed wave buoys | Sourced (search results) |
 | Port noise monitoring | Hydrophones, current profilers, temperature and salinity sensors tied to vessel arrivals | Sourced (Sofar Ocean use case) |
 | Port survey work | Sonar for debris, dredge depth checks, quay wall inspection | Sourced (Teledyne, Kongsberg pages) |
 | Mobile vehicle records (AUV, ROV, USV, divers) | Owner, permit, mission window, mission area, depth, speed, size, identification, recovery aids | **Invented.** No public manifest was found |
@@ -162,7 +163,7 @@ Rules we want to hold:
 
 | Entry | Situation it tests |
 |---|---|
-| RT-001 to RT-003 | Real fixed public stations |
+| RT-001 | Real fixed public tide gauge (CO-OPS 9410660) |
 | RT-004, RT-005 | Fixed harbor sensors, one passive and one active (the active one can cause repeating returns) |
 | RT-006 | Our own node, so the system never flags itself |
 | RT-007 | AUV inside its mission area and window. Should be Cleared |
@@ -197,6 +198,10 @@ Rules we want to hold:
 
 ---
 
+## In the app
+
+`frontend/src/sim/manifest.js` reads the three JSON files and builds the one manifest the matcher uses. Research entries that a sonar can see (AUV, ROV, dive teams) become checked entries with a polygon zone, a local time window, expected sonar class and speed band, and permit state. An expired permit makes an otherwise matching contact fail the "when" check. Vessels, fixed sensors, and wildlife are counted and used to explain contacts but are not sonar-checked. `trustLevel` is stored but not yet used in the verdict.
+
 ## Sources
 
 - [AIS-catcher JSON decoding reference](https://jvde-github.github.io/AIS-catcher-docs/references/JSON-decoding/)
@@ -208,4 +213,3 @@ Rules we want to hold:
 - [Kongsberg: ports and harbors](https://www.kongsberg.com/campaigns/shallow-water/ports--harbors/)
 - [Visit Long Beach: ocean wildlife](https://www.visitlongbeach.com/blog/ocean-wildlife-in-long-beach)
 - [NOAA CO-OPS station 9410660](https://tidesandcurrents.noaa.gov/physocean.html?id=9410660)
-- [CDIP San Pedro 46222 listing](https://data.ioos.us/dataset/092-san-pedro-ca-46222)
