@@ -1,9 +1,11 @@
-import { SCENARIOS, SONAR_NODES } from "../sim/scenario.js";
+import { SCENARIOS } from "../sim/scenario.js";
 import { clockStr, getScenario } from "../sim/useSimulation.js";
 
 export default function SimControls({ sim, dispatch }) {
   const sc = getScenario(sim.scenarioId);
   const started = sim.t > 0;
+  const transportState = sim.running ? "pause" : started ? "resume" : "play";
+  const transportLabel = { play: "Play scenario", pause: "Pause scenario", resume: "Resume scenario" }[transportState];
   return (
     <div className="simbar">
       <div className="simbar-row">
@@ -20,8 +22,20 @@ export default function SimControls({ sim, dispatch }) {
         </div>
 
         <div className="simbar-actions">
-          <button className="primary" onClick={() => dispatch({ type: "TOGGLE" })}>
-            {sim.running ? "Pause" : started ? "Resume" : "Play scenario"}
+          <button
+            type="button"
+            className={`transport-button ${transportState}`}
+            aria-label={transportLabel}
+            title={transportLabel}
+            onClick={() => dispatch({ type: "TOGGLE" })}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+              {sim.running ? (
+                <><rect x="5" y="4" width="5" height="16" rx="1" /><rect x="14" y="4" width="5" height="16" rx="1" /></>
+              ) : (
+                <path d="M6 3.5a1 1 0 0 1 1.5-.86l13 8.5a1 1 0 0 1 0 1.72l-13 8.5A1 1 0 0 1 6 20.5z" />
+              )}
+            </svg>
           </button>
           <button onClick={() => dispatch({ type: "RESTART" })}>Restart</button>
           <label className="speed">
@@ -33,23 +47,6 @@ export default function SimControls({ sim, dispatch }) {
               <option value={4}>4x</option>
             </select>
           </label>
-        </div>
-
-        <div className="nodes">
-          <span className="nodes-label">Sonar nodes (sim)</span>
-          {SONAR_NODES.map((n) => {
-            const off = sim.offline[n.id];
-            return (
-              <button
-                key={n.id}
-                className={`nodechip${off ? " off" : ""}`}
-                title={`${n.name}. Click to ${off ? "restore" : "take offline"}`}
-                onClick={() => dispatch({ type: "NODE", id: n.id })}
-              >
-                {n.id} {off ? "offline" : "online"}
-              </button>
-            );
-          })}
         </div>
 
         <div className="clock" title="Simulated harbor clock">

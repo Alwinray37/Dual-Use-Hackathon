@@ -313,13 +313,14 @@ body {
   border: 1px solid var(--line); background: var(--panel); color: #e8eef5; border-radius: 6px;
 }
 .simbar button:hover, .mini:hover { background: #17344d; }
-.simbar button.primary { background: #0a84ff; border-color: #0a84ff; font-weight: 600; }
+.simbar button.transport-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 34px; padding: 0; color: #fff; }
+.simbar button.transport-button.play { background: #15803d; border-color: #22c55e; }
+.simbar button.transport-button.pause { background: #b45309; border-color: #f59e0b; }
+.simbar button.transport-button.resume { background: #1d4ed8; border-color: #60a5fa; }
+.simbar button.transport-button:hover { filter: brightness(1.15); }
+.simbar button.transport-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .speed { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .speed select { font: inherit; font-size: 12px; background: var(--panel); color: #e8eef5; border: 1px solid var(--line); border-radius: 5px; padding: 3px 4px; }
-.nodes { display: flex; align-items: center; gap: 6px; }
-.nodes-label { font-size: 12px; color: var(--muted); }
-.nodechip { border-color: #4c3f8f !important; color: var(--violet) !important; }
-.nodechip.off { border-color: var(--grey) !important; color: var(--grey) !important; text-decoration: line-through; }
 .clock { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
 .clock-label { font-size: 10px; color: var(--muted); font-weight: 400; text-transform: uppercase; letter-spacing: .06em; }
 .simbar-blurb { margin-top: 6px; font-size: 12.5px; color: #a8c0d0; }
@@ -476,12 +477,6 @@ body {
 .split-handle .grip { width: 5px; height: 64px; border-radius: 3px; background: #3a6585; }
 .split-handle:hover .grip { background: #0a84ff; }
 .split-panel { flex: none; overflow: hidden; background: #0b1520; display: flex; flex-direction: column; min-width: 0; }
-.split-tools { flex: none; display: flex; gap: 6px; padding: 8px 12px 0; }
-.split-tools button {
-  font: inherit; font-size: 13px; padding: 3px 10px; cursor: pointer; color: #e8eef5;
-  background: #17344d; border: 1px solid #2a4a66; border-radius: 6px;
-}
-.split-tools button:hover { background: #1f4565; }
 .split-panel .info-panel { margin: 8px 12px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .split-panel .info-panel-tabs { flex: none; }
 .split-panel .info-panel-body { flex: 1; min-height: 0; max-height: none; overflow: auto; }

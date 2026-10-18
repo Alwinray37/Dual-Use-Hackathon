@@ -45,11 +45,6 @@ function SplitView({ sim, dispatch }) {
         <span className="grip" />
       </div>
       <div className="split-panel" style={{ width: w }}>
-        <div className="split-tools">
-          <button onClick={() => setW(0)}>Map only</button>
-          <button onClick={() => setW(520)}>Split</button>
-          <button onClick={() => setW(9999)}>Panel only</button>
-        </div>
         <MapInfoPanel sim={sim} dispatch={dispatch} />
       </div>
     </main>
